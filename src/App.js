@@ -46,7 +46,18 @@ export default function App() {
     setSelectedFriend((cur) => (cur?.id === friend.id ? null : friend));
     setShowAddFriend(false);
   }
-
+  function handleSplitBill(value) {
+    // console.log(value);
+    //map function will always return a new array and we use SetFriends to pass the new array
+    setFriends((friends) =>
+      friends.map((friend) =>
+        friend.id === selectedFriend.id
+          ? //update the value of balance
+            { ...friend, balance: friend.balance + value }
+          : friend
+      )
+    );
+  }
   return (
     <div className="app">
       <div className="sidebar">
@@ -61,7 +72,12 @@ export default function App() {
           {showAddFriend ? "Close" : "Add friends"}
         </Button>
       </div>
-      {selectedFriend && <FormSpliteBill selectedFriend={selectedFriend} />}
+      {selectedFriend && (
+        <FormSpliteBill
+          selectedFriend={selectedFriend}
+          onSplitBill={handleSplitBill}
+        />
+      )}
     </div>
   );
 }
@@ -142,15 +158,20 @@ function FormAddFriend({ onAddFriend }) {
   );
 }
 
-function FormSpliteBill({ selectedFriend }) {
+function FormSpliteBill({ selectedFriend, onSplitBill }) {
   const [bill, setBill] = useState("");
   const [paidByUser, setPaidByUser] = useState("");
   //because in the beginning the bill is a string
   const paidByFriend = bill ? bill - paidByUser : "";
   const [whoIsPaying, setWhoIsPaying] = useState("user");
 
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!bill || !paidByUser) return;
+    onSplitBill(whoIsPaying === "user" ? paidByFriend : -paidByUser);
+  }
   return (
-    <form className="form-split-bill">
+    <form className="form-split-bill" onSubmit={handleSubmit}>
       <h2>Split a bill with {selectedFriend.name}</h2>
 
       <label>💰 Bill value</label>
@@ -182,7 +203,7 @@ function FormSpliteBill({ selectedFriend }) {
         <option value="user">You</option>
         <option value="friend">{selectedFriend.name}</option>
       </select>
-      <Button> Split bill</Button>
+      <Button type="submit"> Split bill</Button>
     </form>
   );
 }
